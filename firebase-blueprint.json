@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "Prompt": {
+      "title": "Prompt",
+      "description": "Un prompt de ingeniería optimizado para modelos de IA",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "El título del prompt"
+        },
+        "instructions": {
+          "type": "string",
+          "description": "Las instrucciones exactas del prompt"
+        },
+        "description": {
+          "type": "string",
+          "description": "Descripción de las funciones del prompt"
+        },
+        "category": {
+          "type": "string",
+          "description": "La categoría del prompt (e.g. Portrait, Isometric, Architecture, Abstract, Technical, Interior)"
+        },
+        "model": {
+          "type": "string",
+          "description": "El modelo de IA recomendado para este prompt (e.g. Midjourney, DALL-E 3, Stable Diffusion, GPT-4o, Claude 3.5 Sonnet)"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "La URL de la imagen de ejemplo (opcional)"
+        },
+        "authorId": {
+          "type": "string",
+          "description": "El UID del autor del prompt"
+        },
+        "authorEmail": {
+          "type": "string",
+          "description": "El correo del autor del prompt"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fecha de creación del prompt"
+        },
+        "isCommunity": {
+          "type": "boolean",
+          "description": "Si es un prompt público de la comunidad"
+        }
+      },
+      "required": ["title", "instructions", "description", "category", "model", "authorId", "createdAt"]
+    },
+    "Favorite": {
+      "title": "Favorite",
+      "description": "Un prompt marcado como favorito por un usuario",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID del usuario que guarda el favorito"
+        },
+        "promptId": {
+          "type": "string",
+          "description": "El ID del prompt favorito"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fecha en que se marcó como favorito"
+        }
+      },
+      "required": ["userId", "promptId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "prompts": {
+      "schema": { "$ref": "Prompt" },
+      "description": "Colección de todos los prompts de la aplicación"
+    },
+    "favorites": {
+      "schema": { "$ref": "Favorite" },
+      "description": "Colección de favoritos de los usuarios"
+    }
+  }
+}

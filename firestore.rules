@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'google.com');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Prompts Validation
+    function isValidPrompt(data) {
+      return data.title is string && data.title.size() >= 2 && data.title.size() <= 200
+        && data.instructions is string && data.instructions.size() >= 5 && data.instructions.size() <= 10000
+        && data.description is string && data.description.size() <= 2000
+        && data.category is string && data.category.size() <= 100
+        && data.model is string && data.model.size() <= 100
+        && (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 2000))
+        && data.authorId is string && data.authorId == request.auth.uid
+        && data.createdAt is timestamp
+        && (!('isCommunity' in data) || data.isCommunity is bool);
+    }
+
+    match /prompts/{promptId} {
+      allow get, list: if isSignedIn();
+      allow create: if isEmailVerified() && isValidPrompt(incoming());
+      allow update: if isEmailVerified() && isValidPrompt(incoming()) && isOwner(existing().authorId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'instructions', 'description', 'category', 'model', 'imageUrl'])
+      );
+      allow delete: if isEmailVerified() && isOwner(existing().authorId);
+    }
+
+    // Favorites Validation
+    function isValidFavorite(data) {
+      return data.userId is string && data.userId == request.auth.uid
+        && data.promptId is string && data.promptId.size() <= 128
+        && data.createdAt is timestamp;
+    }
+
+    match /favorites/{favoriteId} {
+      allow get, list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isEmailVerified() && isValidFavorite(incoming());
+      allow delete: if isEmailVerified() && isOwner(existing().userId);
+    }
+  }
+}
